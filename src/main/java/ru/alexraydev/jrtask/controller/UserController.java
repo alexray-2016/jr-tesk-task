@@ -7,20 +7,20 @@ import org.springframework.beans.support.PagedListHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 import ru.alexraydev.jrtask.model.User;
 import ru.alexraydev.jrtask.service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 public class UserController {
-
+    boolean inSearch = false;
     private UserService userService;
 
     private PagedListHolder<User> pagedListHolder;
+
+    private PagedListHolder<User> pagedListHolderSearched;
 
     private void setPageListHolderAndModelCondition(Integer page, Model model)
     {
@@ -48,13 +48,14 @@ public class UserController {
     @RequestMapping(value = "users", method = RequestMethod.GET)
     public String listUsers(@RequestParam(required = false) Integer page, Model model)
     {
+        inSearch = false;
         List<User> users = this.userService.listUsers();
         pagedListHolder = new PagedListHolder<User>(users);
         pagedListHolder.setPageSize(5);
         model.addAttribute("user", new User());
         model.addAttribute("listUsers", pagedListHolder);
         model.addAttribute("maxPages", pagedListHolder.getPageCount());
-
+        model.addAttribute("inSearch", inSearch);
         setPageListHolderAndModelCondition(page, model);
         return "users";
     }
@@ -81,17 +82,23 @@ public class UserController {
         return "redirect:/users?page=" + page;
     }
 
-    @RequestMapping(value = {"edit/{id}&{page}", "edit/{id}&{page}&{searchedName}"})
+    @RequestMapping("edit/{id}&{page}")
     public String editUser(@PathVariable("id") int id, @PathVariable("page") Integer page, @RequestParam(value = "searchedName", required = false) String searchedName, Model model)
     {
         model.addAttribute("user", this.userService.getUserById(id));
-        model.addAttribute("listUsers", pagedListHolder);
-        model.addAttribute("maxPages", pagedListHolder.getPageCount());
-        setPageListHolderAndModelCondition(page, model);
         if (searchedName != null)
         {
-            return "search?searchedName=" + searchedName;
+            inSearch = true;
+            model.addAttribute("listUsers", pagedListHolderSearched);
         }
+        else
+        {
+            inSearch = false;
+            model.addAttribute("listUsers", pagedListHolder);
+        }
+        model.addAttribute("maxPages", pagedListHolder.getPageCount());
+        model.addAttribute("inSearch", inSearch);
+        setPageListHolderAndModelCondition(page, model);
         return "users";
     }
 
@@ -103,7 +110,7 @@ public class UserController {
         return "userdata";
     }
 
-    @RequestMapping(value = "search", method = RequestMethod.GET)
+    @RequestMapping("search")
     public String searchByName(@ModelAttribute("user") User user, @RequestParam("searchedName") String searchedName, Model model)
     {
         List<User> searchedUsers = new ArrayList<User>();
@@ -114,9 +121,11 @@ public class UserController {
                 searchedUsers.add(userFor);
             }
         }
+        pagedListHolderSearched = new PagedListHolder<User>(searchedUsers);
         model.addAttribute("user", user);
-        model.addAttribute("searchedUsers", searchedUsers);
+        model.addAttribute("searchedUsers", pagedListHolderSearched);
         model.addAttribute("searchedName", searchedName);
+        model.addAttribute("inSearch", inSearch);
         return "users";
     }
 }

@@ -55,14 +55,14 @@
 </head>
 <body>
 <a href="../../index.jsp">Back to main menu</a>
-
 <br/>
 <br/>
 <form:form action="/search" method="get" modelAttribute="user">
-    <c:if test="${empty searchedUsers}"><input type="text" name="searchedName" id="searchedName" value="">
+    <c:if test="${not inSearch}"><c:if test="${empty searchedUsers.pageList}"><input type="text" name="searchedName" id="searchedName" value="">
     <input type="submit" value="Search">
     </c:if>
     <c:if test="${not empty searchedUsers}">
+        <a href="<c:url value="/users"/>">Back to user list</a>
         <h1>Search results:</h1>
         <table class="tg">
             <tr>
@@ -74,23 +74,25 @@
                 <th width="30">Edit</th>
                 <th width="30">Delete</th>
             </tr>
-            <c:forEach items="${searchedUsers}" var="user">
+            <c:forEach items="${searchedUsers.pageList}" var="user">
                 <tr>
                     <td>${user.id}</td>
                     <td><a href="<c:url value="/userdata/${user.id}"/>">${user.name}</a></td>
                     <td>${user.age}</td>
                     <td>${user.admin}</td>
                     <td>${user.createdDate.toLocaleString()}</td>
-                    <td><a href="<c:url value='/edit/${user.id}&${listUsers.page+1}&${searchedName}'/>">Edit</a></td>
+                    <td><a href="<c:url value='/edit/${user.id}&${listUsers.page+1}?searchedName=${searchedName}'/>">Edit</a></td>
                     <td><a href="<c:url value='/remove/${user.id}&${listUsers.page+1}'/>">Delete</a></td>
                 </tr>
             </c:forEach>
         </table>
         <a href="<c:url value="/users"/>">Back to user list</a>
     </c:if>
+    </c:if>
 </form:form>
 
-<c:if test="${empty searchedUsers}"><h1>User list</h1></c:if>
+<c:if test="${not inSearch}"><h1>User list</h1></c:if>
+<c:if test="${inSearch}"><h1>Search results:</h1></c:if>
 <c:if test="${!empty listUsers}">
     <table class="tg">
         <tr>
@@ -115,7 +117,8 @@
         </c:forEach>
     </table>
 </c:if>
-<div id="pagination">
+<c:if test="${not inSearch}">
+    <div id="pagination">
     <c:url value="/users" var="prev">
         <c:param name="page" value="${page-1}"/>
     </c:url>
@@ -143,7 +146,7 @@
         <a href='<c:out value="${next}" />' class="pn next">Next</a>
     </c:if>
 </div>
-
+</c:if>
 
 <h1> Add/Edit user</h1>
 

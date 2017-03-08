@@ -20,7 +20,7 @@ public class User {
     @Column(name = "age")
     private int age;
 
-    @Column(name = "admin")
+    @Column(name = "isAdmin")
     private boolean admin;
 
 /*    @CreationTimestamp
